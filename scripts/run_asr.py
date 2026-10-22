@@ -21,11 +21,19 @@ def main() -> int:
     parser.add_argument("--full", action="store_true", help="evaluate every row in the manifest")
     parser.add_argument("--dataset-sha256", help="SHA-256 of the source dataset file, if recorded")
     parser.add_argument("--dataset-name", default="VIVOS", help="name recorded in summary.json")
+    parser.add_argument("--device", help="override configured device, e.g. cpu or cuda:0")
+    parser.add_argument("--dtype", choices=("float16", "float32", "bfloat16"), help="override inference dtype")
     args = parser.parse_args()
     if args.dataset_sha256 and not re.fullmatch(r"[0-9a-fA-F]{64}", args.dataset_sha256):
         parser.error("--dataset-sha256 must be a 64-character hexadecimal SHA-256")
 
     asr_config = load_yaml_config(args.config)
+    if args.device:
+        asr_config["device"] = args.device
+    if args.dtype:
+        asr_config.setdefault("inference", {})["dtype"] = args.dtype
+    if not args.full and args.limit <= 0:
+        parser.error("--limit must be positive")
     evaluation_config = load_yaml_config(args.evaluation_config)
     model = asr_config[args.role]
     manifest = args.manifest or evaluation_config.get("asr", {}).get("manifest")

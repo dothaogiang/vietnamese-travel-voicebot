@@ -6,7 +6,15 @@
 
 ## Chọn mẫu và tái lập
 
-`scripts/prepare_bud500.py` chỉ tải `data/test-00000-of-00002-531c1d81edb57297.parquet` (shard đầu của test, khoảng 306 MB). Script đọc cột transcript trước, chọn tối đa 100 hàng đầu chứa một trong các từ khóa du lịch cố định trong `bud500.py`. Việc chọn này diễn ra trước ASR, không dựa trên dự đoán hoặc CER/WER. Sau đó script mới giải mã audio của các hàng được chọn bằng ffmpeg thành PCM 16 kHz mono. Manifest ghi chỉ số hàng gốc trong ID; metadata ghi shard SHA-256, revision nếu tải từ Hub, bộ từ khóa và toàn bộ chỉ số được chọn. Giữ nguyên VIVOS test và protocol `vi-v1`; Bud500 được báo cáo riêng.
+Thí điểm ban đầu chỉ xét `data/test-00000-of-00002-531c1d81edb57297.parquet` (306 MB, 3.750 hàng), có **15** mẫu khớp bộ keyword đã đặt. Mục tiêu 100 mẫu chưa đạt dù cả hai model đã chạy đúng trên 15 mẫu; không đổi threshold hoặc keyword sau khi xem kết quả.
+
+Phiên bản 3 của `scripts/prepare_bud500.py` xét thêm `data/test-00001-of-00002-1b2cd3ea16a2c5b1.parquet` (~302 MB), pin cùng revision trong `configs/bud500.yaml`. Script đọc cột transcript trước, chọn tối đa 100 hàng đầu theo thứ tự hai shard; keyword có ranh giới whitespace sau chuẩn hóa để tránh chọn “thuế” chỉ vì có chuỗi “huế”. Mở rộng phạm vi nguồn được ghi thành version mới; dữ liệu/điểm thí điểm cũ giữ nguyên. Nếu hết hai shard vẫn thiếu 100, báo thiếu dữ liệu và cần thêm tập đánh giá độc lập; không tự lấy thêm train hoặc nới keyword.
+
+Đã xét hết hai shard và tìm được 34 mẫu. Đây là toàn bộ số mẫu khớp bộ keyword trong phạm vi test đã cấu hình, không phải lỗi download. Evaluator chạy cả 34 mẫu để ghi bằng chứng thực tế; `bud500_evaluated` theo dõi việc chấm hợp lệ, còn gate Phase 2 vẫn yêu cầu mục tiêu 100. Khi hai model đã được chấm, lệnh chạy lại không tạo thêm run chỉ vì số mẫu dưới mục tiêu.
+
+Việc chọn diễn ra trước inference trên slice mới và không dựa vào lỗi model. Script giải mã các hàng được chọn thành PCM 16 kHz mono. Audio trên 30 giây bị báo lỗi để tránh chấm trên đầu vào bị cắt ngầm; muốn xử lý cần protocol long-form riêng.
+
+Preparation version `bud500-keyword-v3` lưu tên/hash từng shard, thứ tự chọn, chỉ số hàng, hash manifest và từng WAV. `dataset_sha256` là hash inventory nguồn có thứ tự, không phải hash một archive. Dữ liệu v2 một shard vẫn đọc được. Audio cũ được liên kết bằng hardlink sau khi đối chiếu selection/hash, tránh nhân bản dữ liệu. Root mới là `data/raw/bud500/travel_test_v3/`; VIVOS và protocol metric `vi-v1` giữ nguyên.
 
 ```bash
 conda activate vietnamese-travel-voicebot

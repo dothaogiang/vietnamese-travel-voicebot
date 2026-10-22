@@ -16,14 +16,16 @@ class KnowledgeChunk:
 
 
 def chunk_text(text: str, *, max_chars: int = 700) -> list[str]:
-    """Split on paragraphs and then word boundaries without dropping any text."""
+    """Split on word boundaries, slicing oversized tokens to enforce max_chars."""
     if max_chars <= 0:
         raise ValueError("max_chars must be positive")
     paragraphs = [" ".join(part.split()) for part in text.splitlines() if part.strip()]
     chunks: list[str] = []
     current = ""
     for paragraph in paragraphs:
-        words = paragraph.split()
+        words = [word[start:start + max_chars]
+                 for word in paragraph.split()
+                 for start in range(0, len(word), max_chars)]
         piece = ""
         for word in words:
             candidate = f"{piece} {word}".strip()

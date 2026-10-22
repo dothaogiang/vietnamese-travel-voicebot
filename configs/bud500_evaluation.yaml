@@ -9,5 +9,5 @@ asr:
   dataset: Bud500
   dataset_version: pinned_shard_sha256
   split: test
-  manifest: data/raw/bud500/travel_test_v1/manifest.jsonl
-  selection: first_100_travel_term_matches_in_first_test_shard
+  manifest: data/raw/bud500/travel_test_v3/manifest.jsonl
+  selection: first_100_travel_term_matches_across_configured_test_shards

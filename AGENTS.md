@@ -8,7 +8,7 @@ Xây dựng **Vietnamese Travel Planning & Destination Voicebot** để người
 
 Luồng mặc định: **Voice → VAD → ASR → Intent/Entity → RAG/Tools → LLM → TTS → Voice**. Có thể thay cách triển khai một thành phần, nhưng ghi lại lý do nếu thay đổi kiến trúc hoặc loại bỏ layer. LLM dùng knowledge hoặc tools cho dữ kiện thực tế; không bịa thông tin có thể truy xuất. Dùng RAG cho kiến thức du lịch, tools/API cho dữ liệu realtime hoặc transaction. Tách API/business logic khỏi model và tools.
 
-Repository đã có scaffold: `configs/` cho cấu hình, `src/vietnamese_travel_voicebot/` cho code package, `api/` cho HTTP, `scripts/` cho tác vụ, `tests/` cho kiểm thử và `experiments/` cho hồ sơ thí nghiệm. Các adapter ASR, API và pipeline voicebot vẫn là placeholder. Notebook dành cho exploration và phân tích, không chứa production logic. Chạy starter bằng `python3 main.py`; xem `docs/implementation_plan.md` để biết ranh giới từng giai đoạn.
+Repository dùng `configs/` cho cấu hình, `src/vietnamese_travel_voicebot/` cho code package, `api/` cho HTTP, `scripts/` cho tác vụ, `tests/` cho kiểm thử và `experiments/` cho hồ sơ thí nghiệm. ASR baseline và luồng truy xuất văn bản local đã có; API, VAD, LLM và TTS còn cần tích hợp. Notebook dành cho exploration và phân tích, không chứa production logic. Chạy starter bằng `python3 main.py`; xem `docs/implementation_plan.md` để biết ranh giới từng giai đoạn.
 
 ## Nguyên tắc dữ liệu, model và thí nghiệm
 
@@ -22,7 +22,7 @@ Repository đã có scaffold: `configs/` cho cấu hình, `src/vietnamese_travel
 
 Ưu tiên UI hiện đại, tối giản, thân thiện, tập trung vào voice interaction và lập kế hoạch du lịch. Hiển thị rõ các trạng thái `Idle`, `Listening`, `Processing`, `Thinking`, `Speaking`, `Error`; cho phép xem transcript để kiểm tra ASR. Chỉ thêm UI phục vụ trực tiếp use case.
 
-Đã có `unittest` cho normalization và CER/WER: `.venv/bin/python -m unittest discover -s tests -v` sau khi cài editable theo README. Khi thêm hoặc đổi hành vi, viết kiểm thử tập trung, ghi lại lệnh chạy và kiểm tra các thành phần bị ảnh hưởng. Ưu tiên theo thứ tự: correctness, reproducibility, data/model evaluation, resource efficiency, maintainability, performance, convenience.
+Môi trường chuẩn là **Miniconda `vietnamese-travel-voicebot`**, theo `environment.yml` và README. Activate bằng `conda activate vietnamese-travel-voicebot`; chạy tác vụ và kiểm thử bằng `python` của environment đó. Đã có `unittest`: `python -m unittest discover -s tests -v` sau khi cài editable theo README. Khi thêm hoặc đổi hành vi, viết kiểm thử tập trung, ghi lại lệnh chạy và kiểm tra các thành phần bị ảnh hưởng. Khi đánh giá hoàn tất Phase 2, chạy `python scripts/complete_phase2.py` và xem `docs/05_evaluation/phase2_status.md`; chỉ kết luận theo bằng chứng benchmark và audit. Ưu tiên theo thứ tự: correctness, reproducibility, data/model evaluation, resource efficiency, maintainability, performance, convenience.
 
 ## Quy trình thay đổi
 

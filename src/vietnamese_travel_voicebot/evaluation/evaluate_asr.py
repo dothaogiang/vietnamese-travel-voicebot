@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import platform
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -16,6 +17,7 @@ from vietnamese_travel_voicebot.data.manifest import read_manifest
 from vietnamese_travel_voicebot.data.normalize import normalize_transcript
 from vietnamese_travel_voicebot.evaluation.metrics import calculate_asr_metrics
 from vietnamese_travel_voicebot.utils.audio import load_audio
+from vietnamese_travel_voicebot.utils.versioning import code_version
 
 
 def _atomic_json(path: Path, value: dict[str, Any]) -> None:
@@ -172,6 +174,8 @@ def evaluate_manifest(
         "peak_gpu_memory_bytes": max(peaks) if peaks else None,
         "environment": {
             "python": platform.python_version(),
+            "python_executable": sys.executable,
+            "conda_prefix": sys.prefix if (Path(sys.prefix) / "conda-meta").is_dir() else None,
             "platform": platform.platform(),
             "torch": torch_version,
             "torch_cuda_build": cuda_build,
@@ -179,6 +183,7 @@ def evaluate_manifest(
             "transformers": transformers_version,
         },
         "created_unix_seconds": time.time(),
+        "code_version": code_version(),
     }
     _atomic_json(output / "summary.json", summary)
     return summary

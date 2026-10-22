@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from vietnamese_travel_voicebot.knowledge.chunking import chunk_text
 from vietnamese_travel_voicebot.knowledge.ingestion import load_knowledge
 from vietnamese_travel_voicebot.voicebot.pipeline import answer_text
 
@@ -52,6 +53,16 @@ class TravelKnowledgePipelineTests(unittest.TestCase):
         path.write_text("---\ntitle: Thiếu nguồn\n---\nThông tin chưa dẫn nguồn.\n", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "source_url"):
             load_knowledge(self.root)
+
+
+class ChunkLimitTests(unittest.TestCase):
+    def test_splits_long_tokens_without_losing_characters(self) -> None:
+        for limit in (1, 8, 30):
+            for text in ("https://example.org/" + "a" * 100, "Huế " + "đ" * 90 + " đẹp"):
+                with self.subTest(limit=limit, text=text):
+                    chunks = chunk_text(text, max_chars=limit)
+                    self.assertTrue(all(0 < len(chunk) <= limit for chunk in chunks))
+                    self.assertEqual("".join(chunks).replace(" ", ""), text.replace(" ", ""))
 
 
 if __name__ == "__main__":

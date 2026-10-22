@@ -1,6 +1,6 @@
 # Giai đoạn 2: kiến thức cần nắm để dựng dữ liệu và ASR inference
 
-**Cập nhật ngày 2026-10-19:** Đã tải VIVOS và xác minh checksum; manifest có 11.660 train, 760 test (12.420 WAV). Cả PhoWhisper-small và Whisper-small đã chạy full 760 mẫu trên CPU: CER lần lượt `0.027463` và `0.145556`, không mẫu lỗi. **Giai đoạn 2 chưa hoàn tất:** chưa có tập đánh giá giọng nói du lịch hoặc phép đo GPU; hai tiến trình vLLM đang giữ VRAM. Xem [hồ sơ baseline](../experiments/baseline.md) và [phân tích lỗi](../05_evaluation/error_analysis.md).
+**Cập nhật ngày 2026-10-22:** Đã tải VIVOS và xác minh checksum; manifest có 11.660 train, 760 test (12.420 WAV). Cả PhoWhisper-small và Whisper-small đã chạy full 760 mẫu trên CPU: CER lần lượt `0.027463` và `0.145556`, không mẫu lỗi; số được tính lại từ artifacts. Bud500 đã chạy pilot hợp lệ 15 mẫu trên shard đầu; phiên bản mới xét thêm shard test thứ hai để kiểm tra mục tiêu 100 mẫu. **Giai đoạn 2 chưa hoàn tất:** còn đủ mẫu domain, nghe audit và phép đo GPU. Chạy bằng **Miniconda** và xem [báo cáo trạng thái](../05_evaluation/phase2_status.md), [hồ sơ baseline](../experiments/baseline.md), [phân tích lỗi](../05_evaluation/error_analysis.md).
 
 ## 1. Bản đồ công việc và ranh giới quyết định
 
@@ -13,7 +13,7 @@
 
 **Repo đã chốt:** `vinai/PhoWhisper-small` là baseline chính, `openai/whisper-small` là đối chứng; revision và tham số mục tiêu trong [`configs/asr.yaml`](../../configs/asr.yaml) và [ADR 001](../decisions/001_model_selection.md). VIVOS **bản gốc/test split** là benchmark có điều kiện về quyền dùng theo [ADR 002](../decisions/002_dataset_selection.md). Protocol `vi-v1` ở [`configs/evaluation.yaml`](../../configs/evaluation.yaml) và [mô tả metric](../05_evaluation/asr_metrics.md). Đây là lựa chọn của dự án, không phải quy tắc chung cho mọi hệ ASR. Theo [model card PhoWhisper](https://huggingface.co/vinai/PhoWhisper-small) và [model card Whisper-small](https://huggingface.co/openai/whisper-small), phải đọc riêng điều kiện sử dụng từng model trước khi triển khai.
 
-**Đã xác minh từ terminal host của người dùng:** CUDA khả dụng, 1 GPU `NVIDIA GeForce RTX 3050`, 5.66 GiB VRAM. **Agent sandbox vẫn không thấy CUDA.** Chưa đo VRAM model, thời gian nạp, RTF, CER/WER hay segmentation; GPU sẵn sàng không chứng minh model đã chạy vừa VRAM. [Hồ sơ baseline](../experiments/baseline.md) ghi tách biệt hai môi trường.
+**Đã xác minh từ terminal host của người dùng:** CUDA khả dụng, 1 GPU `NVIDIA GeForce RTX 3050`, 5.66 GiB VRAM. **Agent sandbox vẫn không thấy CUDA.** CER/WER/RTF đã có trên CPU; VRAM model và RTF GPU chưa được đo. GPU sẵn sàng không chứng minh model đã chạy vừa VRAM. [Hồ sơ baseline](../experiments/baseline.md) ghi tách biệt hai môi trường.
 
 ## 2. ASR và Whisper: từ sóng âm đến văn bản
 
@@ -44,9 +44,9 @@ Trong dự án, đích preprocessing hiện là **16 kHz, một kênh** theo [`c
 
 Sau khi có quyền dùng và tải từ nguồn gốc, cần lập hồ sơ: URL/DOI, version, ngày truy cập, tên và kích thước archive, checksum công bố và checksum tính lại, license, cấu trúc thư mục, số file, format/sample rate/channels/duration, bảng speaker và split. Checksum giúp phát hiện file tải lỗi hoặc thay đổi nội dung, không chứng minh dữ liệu được cấp phép. Zenodo công bố MD5 archive; có thể ghi thêm SHA-256 nội bộ, nhưng không tự suy ra chúng từ tên file. [Metadata VIVOS trên Zenodo](https://zenodo.org/records/7068130).
 
-**Manifest** là bảng ánh xạ có thể kiểm tra. Parser hiện thực trong `src/vietnamese_travel_voicebot/data/manifest.py` ghi mỗi dòng JSONL với `utterance_id`, đường dẫn tương đối `audio_path`, `transcript`, `split`, `speaker_id`, `duration_s`, `sample_rate_hz`, `channels` và `sample_width_bytes`. Parser yêu cầu WAV PCM không rỗng, transcript hợp lệ, ID duy nhất, audio tồn tại, speaker không giao giữa train/test; nó không chứng minh transcript khớp audio và chưa kiểm định dữ liệu VIVOS thật. Checksum archive được lưu trong summary khi truyền `--dataset-sha256`; checksum không được suy ra từ manifest. [Thống kê split gốc của VIVOS](https://zenodo.org/records/7068130).
+**Manifest** là bảng ánh xạ có thể kiểm tra. Parser hiện thực trong `src/vietnamese_travel_voicebot/data/manifest.py` ghi mỗi dòng JSONL với `utterance_id`, đường dẫn tương đối `audio_path`, `transcript`, `split`, `speaker_id`, `duration_s`, `sample_rate_hz`, `channels` và `sample_width_bytes`. Parser yêu cầu WAV PCM không rỗng, transcript hợp lệ, ID duy nhất, audio tồn tại, speaker không giao giữa train/test; kiểm định kỹ thuật VIVOS đã đạt nhưng không thay cho nghe đối chiếu transcript. Checksum archive được lưu trong summary khi truyền `--dataset-sha256`; checksum không được suy ra từ manifest. [Thống kê split gốc của VIVOS](https://zenodo.org/records/7068130).
 
-`data/` hiện chưa chứa dataset hay manifest thực tế. Một **smoke subset** lấy theo thứ tự ID ổn định trong manifest và được ghi `run_kind=smoke_subset`; không được báo như benchmark toàn test split. Dùng `--full` chỉ sau khi xác nhận manifest là VIVOS test đã khóa; đây là nguyên tắc repo trong [ADR 002](../decisions/002_dataset_selection.md).
+`data/` đã có VIVOS và manifest train/test thực tế. Một **smoke subset** lấy theo thứ tự ID ổn định trong manifest và được ghi `run_kind=smoke_subset`; không được báo như benchmark toàn test split. Dùng `--full` chỉ sau khi xác nhận manifest là VIVOS test đã khóa; đây là nguyên tắc repo trong [ADR 002](../decisions/002_dataset_selection.md).
 
 ## 5. Adapter inference với Transformers và GPU 6 GB
 
@@ -64,7 +64,7 @@ Protocol `vi-v1` đã khóa: Unicode NFC → lowercase → dấu câu thành kho
 
 Ví dụ reference `"đà nẵng"`, hypothesis `"đà nang"`: một thay thế ký tự tạo CER `1/7` theo quy tắc đếm cả khoảng trắng, một token sai tạo WER `1/2`. Nếu reference rỗng sau chuẩn hóa, dữ liệu lỗi; nếu hypothesis rỗng, toàn bộ reference là deletion. Cần đọc ba thao tác edit distance: **substitution, deletion, insertion**. Khi phân tích lỗi, lưu cả text gốc và text chuẩn hóa để nhận ra lỗi do model hay do quy tắc normalization. [Protocol `vi-v1`](../05_evaluation/asr_metrics.md).
 
-**RTF (real-time factor)** trong báo cáo này định nghĩa là `thời gian xử lý / thời lượng audio`; RTF < 1 nghĩa là lần chạy đó xử lý nhanh hơn thời lượng clip. Evaluator đo thời gian giải mã/resample + inference cho từng mẫu; model load và warm-up được ghi riêng/loại khỏi RTF. Hai full run CPU đạt mean RTF lần lượt `0.4801` và `0.4736` trên cùng manifest, batch và dtype. GPU xử lý bất đồng bộ, nên phải đồng bộ trước/sau vùng đo hoặc dùng CUDA events để tránh báo thiếu thời gian. [PyTorch CUDA synchronize](https://docs.pytorch.org/docs/cuda.html), [CUDA events](https://docs.pytorch.org/docs/stable/generated/torch.cuda.streams.Event.html). RTF CPU dưới 1 chưa chứng minh độ trễ hội thoại toàn hệ thống hoặc hiệu năng GPU.
+**RTF (real-time factor)** trong báo cáo này định nghĩa là `thời gian xử lý / thời lượng audio`; RTF < 1 nghĩa là lần chạy đó xử lý nhanh hơn thời lượng clip. Evaluator đo thời gian giải mã/resample + inference cho từng mẫu; model load và warm-up được loại khỏi RTF, warm-up có trường thời gian riêng. Thời gian model load chưa được đo trong các run hiện tại. Hai full run CPU đạt mean RTF lần lượt `0.4801` và `0.4736` trên cùng manifest, batch và dtype. GPU xử lý bất đồng bộ, nên phải đồng bộ trước/sau vùng đo hoặc dùng CUDA events để tránh báo thiếu thời gian. [PyTorch CUDA synchronize](https://docs.pytorch.org/docs/cuda.html), [CUDA events](https://docs.pytorch.org/docs/stable/generated/torch.cuda.streams.Event.html). RTF CPU dưới 1 chưa chứng minh độ trễ hội thoại toàn hệ thống hoặc hiệu năng GPU.
 
 Kết quả hiện tại cho phép phân nhóm lỗi để chẩn đoán: tên địa danh/tên riêng, dấu thanh, chữ số/ngày giờ, phát âm vùng miền, nhiễu, từ bị bỏ sót và câu dài. [Phân tích bước đầu](../05_evaluation/error_analysis.md) mới xác định speaker/câu có lỗi cao; cần nghe kiểm định trước khi gán nguyên nhân. VIVOS là tiếng đọc yên tĩnh theo [mô tả nguồn gốc](https://zenodo.org/records/7068130), nên benchmark này chưa đo đủ speech du lịch thực địa. Lưu sample ID, audio provenance, reference, hypothesis, thời lượng, group và cả ca thất bại. Không chọn lại test set hoặc chỉnh normalization theo lỗi đã xem; nếu đổi phương pháp thì tạo experiment version mới theo [kế hoạch](../implementation_plan.md).
 
@@ -83,10 +83,19 @@ Thời lượng trên là **gợi ý học tập**, không phải ước tính t
 - Giải thích được từ raw audio đến transcript, vì sao Whisper cần waveform đúng sample rate, và cách xử lý clip dài mà không làm mất lời nói.
 - CUDA/VRAM đã được xác minh từ terminal host; cần chạy inference cũng trên host đó để đo peak VRAM và phân biệt OOM với lỗi decode audio. Tool sandbox hiện không có CUDA; xem [hồ sơ baseline](../experiments/baseline.md).
 - Xác nhận quyền dùng VIVOS cho mục đích cụ thể; biết kiểm tra checksum, split, speaker và chất lượng bản ghi trước khi tạo manifest. Dữ liệu đã tải và qua kiểm định kỹ thuật; kiểm định nghe thủ công mẫu lỗi nặng vẫn còn.
-- Contract audio, manifest và adapter đã có kiểm thử fixture; chưa xác nhận với VIVOS/model thật.
+- Contract audio, manifest và adapter đã có kiểm thử fixture cùng full VIVOS/model thật trên CPU; GPU vẫn cần đo riêng.
 - Có thể tự tính CER/WER `vi-v1`, thiết kế phép đo RTF, lưu revision/config/runtime/sample IDs và phân tích lỗi mà không thay test split sau khi nhìn kết quả.
 
 ### Cách chạy code Phase 2
+
+Môi trường chuẩn là **Miniconda**:
+
+```bash
+conda activate vietnamese-travel-voicebot
+python scripts/complete_phase2.py
+```
+
+Lệnh này kiểm tra artifacts đã có, tạo bộ nghe `review.html`/`review.csv` và cập nhật báo cáo. Sau khi tài khoản có quyền Bud500 và GPU đủ VRAM, dùng `python scripts/complete_phase2.py --run-bud500 --run-gpu`. Điền audit theo [hướng dẫn phân tích lỗi](../05_evaluation/error_analysis.md), rồi chạy lại không có flags để đóng checklist. Exit code 2 nghĩa còn điều kiện thiếu, không phải đã hoàn thành.
 
 Lệnh sau tải VIVOS chính thức (đã được chấp thuận cho nghiên cứu phi thương mại), kiểm MD5, tạo manifest và chạy smoke/full lần lượt cho PhoWhisper-small và Whisper-small trên host GPU:
 
@@ -119,4 +128,4 @@ python -m unittest discover -s tests -v
 
 Các kiểm thử hiện dùng fixture tổng hợp và fake model trên CPU; chúng chứng minh contract/pipeline được nối, không chứng minh checkpoint thật tương thích, chạy được trên RTX 3050 hay đạt metric nào.
 
-Giai đoạn 2 chỉ hoàn tất sau khi smoke và toàn bộ VIVOS test split chạy trên host GPU, metadata/checksum được xác nhận, và CER/WER/RTF/VRAM cùng các lỗi được lưu vào `experiments/001_asr_baseline/` theo [checkpoint](../implementation_plan.md).
+Giai đoạn 2 chỉ hoàn tất khi full VIVOS hai model hợp lệ, bộ nghe có ghi chú, hai model chạy đủ Bud500 keyword slice và phép đo CUDA có CER/WER/RTF/VRAM. Các điều kiện được xác nhận bởi `complete_phase2.py` theo [checkpoint](../implementation_plan.md), không suy ra từ việc script đã thoát mà không hiện traceback.

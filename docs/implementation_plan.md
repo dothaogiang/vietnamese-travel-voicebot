@@ -37,7 +37,7 @@ Từ starter `main.py`, xây dựng nền tảng có thể phát triển thành 
 
 Đọc [báo cáo kiến thức cần nắm](03_asr/phase_2_learning_guide.md) trước khi thiết kế manifest, audio preprocessing và adapter inference.
 
-- [ ] Khôi phục Git/version ID cho code; metadata `.git` hiện không khả dụng trong workspace.
+- [x] Git đã có commit và remote ngày 2026-10-22; run mới ghi commit, dirty flag, hash mã nguồn và interpreter Miniconda. Các run CPU cũ giữ nguyên metadata gốc, không gán hồi tố Git revision.
 - [x] Pin phiên bản dependency inference; mỗi run lưu model revision, config, manifest/archive checksum tùy cung cấp và môi trường.
 - [x] Xác minh CUDA trên host và quyền nghiên cứu phi thương mại cho VIVOS.
 - [x] Tải VIVOS từ Zenodo ngày 2026-10-19; MD5 `72972a8b14050f3f11ea7c3debabd7af`, SHA-256 `147477f7a7702cbafc2ee3808d1c142989d0dbc8d9fce8e07d5f329d5119e4ca`; metadata lưu tại `data/raw/vivos/vivos_metadata.json`.
@@ -49,11 +49,12 @@ Từ starter `main.py`, xây dựng nền tảng có thể phát triển thành 
 - [x] Chạy full test VIVOS cho PhoWhisper-small bằng CPU ngày 2026-10-19: 760/760, 0 lỗi, CER 0.027463, WER 0.062808, RTF 0.4801.
 - [x] Chạy full test VIVOS cho Whisper-small bằng CPU ngày 2026-10-19: 760/760, 0 lỗi, CER 0.145556, WER 0.266770, RTF 0.4736.
 - [x] Phân tích lỗi bước đầu theo câu và speaker trên cùng 760 mẫu; xem `docs/05_evaluation/error_analysis.md`.
-- [x] Chuẩn bị đường chạy Bud500 test shard để đánh giá thêm tiếng Việt nhiều chủ đề và lọc mẫu có từ khóa du lịch; chưa tải/chạy dữ liệu thật do agent sandbox không có DNS và kho yêu cầu chấp nhận điều kiện truy cập.
+- [x] Bud500 đã tải hai shard test, tìm được 34 mẫu khớp bộ keyword đã khóa; pilot 15 mẫu đầu được giữ riêng. Version 3 đánh giá số mẫu thực có và tránh lặp lại inference; mục tiêu 100 vẫn được theo dõi là thiếu.
+- [x] Thêm bộ kiểm chứng summary/predictions/manifest, tính lại CER/WER và bộ nghe audit 10 câu lỗi + 3 câu đúng. Script `complete_phase2.py` điều phối phần còn thiếu và sinh báo cáo; không tự đánh dấu đã nghe.
 - [ ] Nghe kiểm định các câu lỗi nặng; bổ sung bộ câu du lịch có quyền sử dụng, tách khỏi benchmark VIVOS.
 - [ ] Đo bộ nhớ và tốc độ ASR trên GPU khi workload vLLM nhả VRAM; hiện kết quả chính thức chỉ có CPU.
 
-**Checkpoint:** dữ liệu và full VIVOS test cho cả hai model đã đạt trên CPU cùng protocol; PhoWhisper-small tốt hơn Whisper-small trên VIVOS. Chưa nghe kiểm định lỗi nặng, chưa có tập đánh giá du lịch hoặc đo VRAM/GPU; đây chưa phải giai đoạn 2 hoàn tất. `bash scripts/run_phase2.sh` điều phối benchmark trên host; agent sandbox không truy cập GPU.
+**Checkpoint:** full VIVOS và toàn bộ 34 mẫu keyword Bud500 đều đã chạy hai model trên CPU, đối chiếu predictions/manifest; Bud500 thiếu mục tiêu 100 dù đã xét hết hai test shard. Chưa nghe kiểm định lỗi nặng hoặc đo VRAM/GPU; đây chưa phải giai đoạn 2 hoàn tất. Cần thêm dữ liệu đánh giá độc lập để đạt mục tiêu domain. Trong Miniconda, dùng `python scripts/complete_phase2.py --run-gpu` khi GPU đủ VRAM, sau đó điền audit và chạy lại không có flags để kiểm tra. [Báo cáo trạng thái](05_evaluation/phase2_status.md) theo dõi số mẫu và việc chấm riêng, không chạy lại model để bù số mẫu thiếu.
 
 ### Giai đoạn 3 — Voicebot dọc tối thiểu
 

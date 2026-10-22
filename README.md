@@ -28,6 +28,23 @@ Lệnh cuối phải báo `cuda_available=True` và nhận diện RTX 3050. `pip
 
 ## Phase 2: dữ liệu và ASR
 
+Môi trường chạy là **Miniconda `vietnamese-travel-voicebot`**. Để tiếp tục từ kết quả VIVOS đã có, tạo báo cáo kiểm tra và bộ nghe lỗi:
+
+```bash
+conda activate vietnamese-travel-voicebot
+python scripts/complete_phase2.py
+```
+
+Mở `experiments/001_asr_baseline/outputs/phase2_audit/review.html`, nghe 10 câu lỗi nặng và 3 câu đúng được chọn. Điền `review.csv` cùng thư mục: `review_status=reviewed`, một `error_group` có trong hướng dẫn HTML và ghi nhận vào `notes`. Script giữ nguyên các ghi chú khi chạy lại. Bộ nghe dùng audio gốc, không nhân bản dataset.
+
+Sau khi tài khoản được cấp quyền Bud500 và GPU còn ít nhất 2,5 GiB VRAM trống, chạy phần còn thiếu:
+
+```bash
+python scripts/complete_phase2.py --run-bud500 --run-gpu
+```
+
+Lệnh này chạy hai model tuần tự trên Bud500 và full VIVOS GPU/FP16; mỗi lần ghi vào thư mục mới. Báo cáo ở [trạng thái Phase 2](docs/05_evaluation/phase2_status.md), cấu hình tại `configs/phase2.yaml`. Exit code `2` nghĩa là còn điều kiện chưa đạt, xem các dòng `PENDING`; chỉ báo hoàn tất khi có đủ benchmark, phép đo GPU và review audio. Các run mới ghi Git commit, hash source, interpreter và Conda prefix. Nếu GPU hoặc quyền dữ liệu chưa sẵn sàng, báo cáo vẫn được sinh.
+
 Từ thư mục gốc repository và sau khi activate Conda environment, chạy toàn bộ baseline và đối chứng trên host bằng một lệnh. Script dùng Python của Conda đang active, tải/kiểm MD5 VIVOS, tạo manifest, rồi chạy smoke và full test split tuần tự cho hai model:
 
 ```bash
@@ -58,7 +75,9 @@ python -m pip install -e '.[bud500]'
 bash scripts/run_bud500.sh
 ```
 
-Script chỉ tải shard đầu của **test** (khoảng 306 MB), chọn tối đa 100 câu có từ khóa du lịch theo thứ tự nguồn, lưu WAV/manifest local rồi chạy PhoWhisper-small và Whisper-small tuần tự. Không tải toàn bộ Bud500. Nếu đã có shard test ở máy, dùng `bash scripts/run_bud500.sh --parquet /duong/dan/test-....parquet`. Kết quả mỗi lần chạy ở một thư mục timestamp trong `experiments/002_bud500_eval/outputs/`; metadata về shard, checksum, revision và quy tắc chọn mẫu ở `data/raw/bud500/travel_test_v1/metadata.json`. Xem [protocol Bud500](docs/05_evaluation/bud500_protocol.md). Tập chọn theo từ khóa chỉ là đánh giá bổ sung, chưa chứng minh chất lượng voicebot trên câu hỏi du lịch thực tế.
+Shard test đầu (306 MB) cho 15 mẫu khớp từ khóa; hai model đã chạy thành công. Sau khi xét **cả hai shard test** (khoảng 608 MB tổng cộng), có 34 mẫu khớp keyword. Script đánh giá cả 34 mẫu và báo rõ mục tiêu 100 chưa đạt. Khi đã có kết quả hợp lệ của hai model trên cùng manifest, chạy lại lệnh sẽ bỏ qua inference. Không tải thêm train hoặc đổi keyword để làm đạt checklist; muốn đạt 100 cần thêm dữ liệu đánh giá độc lập.
+
+Chạy tiếp bằng `python scripts/complete_phase2.py --run-bud500`. Cache cũ 306 MB được tái dùng; phần tải thêm tối đa khoảng 302 MB. Slice kết hợp version 3 nằm tại `data/raw/bud500/travel_test_v3/`, kết quả tại `experiments/002_bud500_eval/outputs/test_keyword_v3/`; bộ 15 mẫu và run cũ được giữ nguyên. Nếu tải bằng trình duyệt, có thể cung cấp cả hai file qua `bash scripts/run_bud500.sh --parquet /duong/dan/test-00000-....parquet --parquet /duong/dan/test-00001-....parquet`. Xem [protocol Bud500](docs/05_evaluation/bud500_protocol.md). Tập lọc keyword chưa đại diện cho hội thoại du lịch tự nhiên.
 
 ## Phase 3: hỏi đáp du lịch bằng văn bản
 
@@ -84,4 +103,4 @@ Hiện retrieval dựa trên trùng từ khóa, chưa có embedding/LLM, dữ li
 
 ## Trạng thái
 
-Host đã xác nhận RTX 3050 5.66 GiB và CUDA hoạt động. VIVOS đã tải, checksum hợp lệ và manifest train/test đã tạo. Hai model đã chạy full 760 mẫu VIVOS test trên CPU; PhoWhisper-small CER 0.027463, Whisper-small CER 0.145556, cả hai không có mẫu lỗi. Luồng hỏi đáp văn bản có thể chạy trên một nguồn mẫu Huế; Bud500 đang chờ cấp quyền và phép đo GPU vẫn còn. Xem [kế hoạch triển khai](docs/implementation_plan.md), [báo cáo Phase 2](docs/03_asr/phase_2_learning_guide.md), [hồ sơ baseline](docs/experiments/baseline.md) và [hướng dẫn dự án](PROJECT_GUIDELINES.md).
+Host đã xác nhận RTX 3050 5.66 GiB và CUDA hoạt động. VIVOS đã tải, checksum hợp lệ và manifest train/test đã tạo. Hai model đã chạy full 760 mẫu VIVOS test trên CPU; PhoWhisper-small CER 0.027463, Whisper-small CER 0.145556, cả hai không có mẫu lỗi. Luồng hỏi đáp văn bản có thể chạy trên một nguồn mẫu Huế; Bud500 có pilot hợp lệ 15 mẫu, còn thiếu mục tiêu 100 mẫu và phép đo GPU. Xem [kế hoạch triển khai](docs/implementation_plan.md), [báo cáo Phase 2](docs/03_asr/phase_2_learning_guide.md), [hồ sơ baseline](docs/experiments/baseline.md) và [hướng dẫn dự án](PROJECT_GUIDELINES.md).
