@@ -1,0 +1,15 @@
+asr:
+  protocol_version: vi-v1
+  normalization: vi-v1
+  primary_metric: cer
+  secondary_metric: wer
+  aggregation: corpus_micro
+  cer_includes_spaces: true
+  wer_tokenization: whitespace
+  dataset: VIVOS
+  dataset_version: original_2016
+  split: test
+  manifest: null  # Fill only after licensed local data has been inspected.
+  error_groups: [proper_nouns, tones, numbers, noise, regional_accents, omissions]
+voicebot:
+  metrics: []  # Define rubric and fixed evaluation set before comparison.

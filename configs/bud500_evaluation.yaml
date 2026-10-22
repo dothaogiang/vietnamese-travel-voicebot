@@ -1,0 +1,13 @@
+asr:
+  protocol_version: vi-v1
+  normalization: vi-v1
+  primary_metric: cer
+  secondary_metric: wer
+  aggregation: corpus_micro
+  cer_includes_spaces: true
+  wer_tokenization: whitespace
+  dataset: Bud500
+  dataset_version: pinned_shard_sha256
+  split: test
+  manifest: data/raw/bud500/travel_test_v1/manifest.jsonl
+  selection: first_100_travel_term_matches_in_first_test_shard

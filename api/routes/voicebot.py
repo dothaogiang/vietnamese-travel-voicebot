@@ -1,0 +1,1 @@
+"""Voicebot HTTP route placeholder."""

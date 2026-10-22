@@ -1,0 +1,9 @@
+enabled: false
+embedding_provider: null  # First text slice uses lexical retrieval without embeddings.
+vector_store: local_markdown
+retrieval:
+  strategy: lexical_token_overlap
+  top_k: 3
+  max_chunk_chars: 700
+  min_token_overlap: 0.25
+  require_sources: true

@@ -1,0 +1,6 @@
+name: vietnamese-travel-voicebot
+channels:
+  - defaults
+dependencies:
+  - python=3.13
+  - pip

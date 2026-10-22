@@ -1,0 +1,2 @@
+# Dùng metadata trong pyproject.toml làm nguồn dependency duy nhất.
+-e .

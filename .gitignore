@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Audio and datasets: keep local or in approved storage
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.parquet
+*.arrow
+data/raw/**
+data/processed/**
+data/travel_domain/**
+data/manifests/*.jsonl
+!data/raw/**/.gitkeep
+!data/processed/**/.gitkeep
+!data/travel_domain/**/.gitkeep
+
+# Model weights and generated artifacts
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+models/**
+!models/**/.gitkeep
+experiments/**/checkpoints/
+experiments/**/outputs/
+
+# Local tooling
+.idea/
+.vscode/
+.DS_Store

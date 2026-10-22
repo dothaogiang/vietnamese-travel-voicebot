@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vietnamese-travel-voicebot"
+version = "0.1.0"
+description = "Vietnamese voice assistant for travel planning and destination information"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy==2.2.6"]
+
+[project.optional-dependencies]
+asr = [
+    "numpy==2.2.6",
+    "PyYAML==6.0.3",
+    "torch==2.9.1",
+    "torchaudio==2.9.1",
+    "transformers==4.57.6",
+    "huggingface-hub==0.36.2",
+]
+bud500 = ["pyarrow==24.0.0", "huggingface-hub==0.36.2"]
+voicebot = ["PyYAML==6.0.3"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["vietnamese_travel_voicebot*"]

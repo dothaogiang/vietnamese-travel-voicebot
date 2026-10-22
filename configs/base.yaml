@@ -1,0 +1,5 @@
+project:
+  name: vietnamese-travel-voicebot
+  domain: vietnamese_travel_planning_and_destination_information
+environment: development
+seed: 42

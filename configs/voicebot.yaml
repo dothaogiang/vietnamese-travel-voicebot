@@ -1,0 +1,9 @@
+pipeline:
+  vad: null
+  asr: asr
+  intent: null
+  retrieval: rag
+  tools: []
+  llm: null
+  tts: null
+voice_states: [Idle, Listening, Processing, Thinking, Speaking, Error]
